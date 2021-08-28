@@ -12,8 +12,8 @@
 
 #define SERVER_ADDR "127.0.0.1"
 #define FILE_NAME_SIZE 256
-#define BUFF_SIZE 65543
-#define BLOCK_SIZE 65536
+#define BLOCK_SIZE 65535
+#define BUFF_SIZE 65542
 #pragma comment(lib, "Ws2_32.lib")
 
 using namespace std;
@@ -229,9 +229,9 @@ message: message client gui den
 len: length of message
 */
 void handleSearchFile(Client &client, char *message, int len) {
-	
+
 	int ret;
-	
+
 	// Gui lai message dang xu ly tim kiem: opcode = '5' va payload = '11'
 	char buff[BUFF_SIZE];
 	buff[0] = '5';
@@ -245,9 +245,9 @@ void handleSearchFile(Client &client, char *message, int len) {
 	// Gui yeu cau tim kiem file toi cac client dang online
 
 	// Chi co 1 client dang online
-	if (nEvents == 2) { 
+	if (nEvents == 2) {
 		// Gui message bao loi tim kiem file: opcode = '5' va payload = '10'
-		buff[0] = '4';
+		buff[0] = '5';
 		buff[7] = '1';
 		buff[8] = '0';
 		unsigned short payloadLen = 2;
@@ -264,7 +264,7 @@ void handleSearchFile(Client &client, char *message, int len) {
 	memcpy(client.fileName, message + 7, len - 7); // gan ten file dang tim kiem cho client
 	client.fileName[len - 7] = 0; // gan ky tu ket thuc xau
 
-	// Tao message yeu cau tim kiem: Opcode = '1', id = socket cua client, payload = ten files
+								  // Tao message yeu cau tim kiem: Opcode = '1', id = socket cua client, payload = ten files
 	buff[0] = '1';
 	memcpy(buff + 7, message + 7, len - 7);
 	unsigned short fileNameLen = len - 7;
@@ -291,31 +291,41 @@ void handleDowloadFile(Client &client, char *message, int len) {
 
 	client.downloadClient = desClientSock;
 
-	// Phan hoi lai client yeu cau download file message dang xu ly download: opcode = '5' va payload = '21'
-	buff[0] = '5';
-	buff[7] = '2';
-	buff[8] = '1';
-	unsigned short payloadLen = 2;
-	memcpy(buff + 5, &payloadLen, 2);
-	ret = sendMsg(client.socket, buff, 9);
-
 	// Gui yeu cau download file den desClientSock
-	// Thong diep voi opcode = '2', id = client.sock, payload = ten file 
+	// Thong diep voi opcode = '2', id = client.sock, payload = ten file
 	buff[0] = '2';
 	memcpy(buff + 1, &client.socket, 4);
-	
+
 	unsigned short fileNameLen = strlen(client.fileName);
 	memcpy(buff + 5, &fileNameLen, 2);
 	memcpy(buff + 7, client.fileName, fileNameLen);
 
 	ret = sendMsg(desClientSock, buff, 7 + fileNameLen);
+	if (ret == -1) {
+		// Phan hoi lai client yeu cau download file rang khong the download: opcode = '5' va payload = '20'
+		buff[0] = '5';
+		buff[7] = '2';
+		buff[8] = '0';
+		unsigned short payloadLen = 2;
+		memcpy(buff + 5, &payloadLen, 2);
+		sendMsg(client.socket, buff, 9);
+	}
+	else {
+		// Phan hoi lai client yeu cau download file message dang xu ly download: opcode = '5' va payload = '21'
+		buff[0] = '5';
+		buff[7] = '2';
+		buff[8] = '1';
+		unsigned short payloadLen = 2;
+		memcpy(buff + 5, &payloadLen, 2);
+		sendMsg(client.socket, buff, 9);
+	}
 }
 
 /*
 Xu ly ket qua tim kiem file tu cac client gui ve
 len: length of message
 */
-void handleSearchFileResult(Client &client, char *message, int len) 
+void handleSearchFileResult(Client &client, char *message, int len)
 {
 	int index; // index cua client gui yeu cau tim kiem file
 	SOCKET desClientSocket;
@@ -335,11 +345,11 @@ void handleSearchFileResult(Client &client, char *message, int len)
 	}
 
 	// Tat ca client duoc yeu cau da tra ve ket qua tim kiem
-	if (clients[index].currNumClient-1 == clients[index].returnNumClient) {
+	if (clients[index].currNumClient - 1 == clients[index].returnNumClient) {
 		char buff[BUFF_SIZE];
 
 		if (clients[index].clientHaveFile.empty()) { // Khong co client nao co file
-			// Gui message bao loi tim kiem file: opcode = '3' va payload = rong
+													 // Gui message bao loi tim kiem file: opcode = '3' va payload = rong
 			buff[0] = '3';
 			unsigned short payloadLen = 0;
 			memcpy(buff + 5, &payloadLen, 2);
@@ -351,7 +361,7 @@ void handleSearchFileResult(Client &client, char *message, int len)
 
 			char list[1024];
 			strcpy_s(list, "");
-			for (auto sock: clients[index].clientHaveFile) {
+			for (auto sock : clients[index].clientHaveFile) {
 				strcat_s(list, to_string(sock).c_str());
 				strcat_s(list, "-");
 			}
@@ -396,8 +406,13 @@ void handleMsg(Client &client, char *message, int len)
 		memcpy(&desClientSock, message + 1, 4); // Tinh socket cua client yeu cau download file tu ID cua thong diep
 		sendMsg((SOCKET)desClientSock, message, len);
 
-		if (len == 0) {
-			client.downloadClient = 0;
+		if (len == 7) { //fix bug
+			for (int i = 1; i <= nEvents; i++) {
+				if (socks[i] == desClientSock) {
+					clients[i].downloadClient = 0;
+					break;
+				}
+			}
 		}
 		sendACK(client.socket);
 		break;
@@ -407,7 +422,7 @@ void handleMsg(Client &client, char *message, int len)
 		memcpy(code, message + 7, 2);
 
 		if (memcmp(code, "40", 2) == 0) { // Da nhan duoc block
-			// Gui cho client gui file message bao rang client yeu cau file da nhan duoc block
+										  // Gui cho client gui file message bao rang client yeu cau file da nhan duoc block
 			memcpy(message + 1, &client.socket, 4);
 			sendMsg(client.downloadClient, message, len);
 		}
@@ -432,35 +447,34 @@ void recvMsg(Client &client, int n)
 	unsigned short payloadLen;
 	char opcode;
 
+	//while (1) {
 	nLeft = 7;
 	index = 0;
 	while (nLeft > 0) {
 		ret = recv(client.socket, buff + index, nLeft, 0);
 		if (ret == SOCKET_ERROR) {
-			printf("Error %d: Cannot receive message\n", WSAGetLastError());
-			disconnect(n);
-			return;
+			//printf("Error %d: Cannot receive message\n", WSAGetLastError());
+			//disconnect(n); return;
+			//break;
 		}
 		else {
-			nLeft -= ret;
-			index += ret;
+			nLeft -= ret; index += ret;
 		}
 	}
 
 	opcode = buff[0];
 
 	memcpy(&payloadLen, buff + 5, 2);
+	//cout << "Opcode-" << buff[0] << " length: " << payloadLen << endl;
 	nLeft = payloadLen;
 	while (nLeft > 0) {
 		ret = recv(client.socket, buff + index, nLeft, 0);
 		if (ret == SOCKET_ERROR) {
 			//printf("Error %d: Cannot receive message\n", WSAGetLastError());
-			disconnect(n);
-			return;
+			//return -1;
 		}
 		else {
-			nLeft -= ret;
-			index += ret;
+			nLeft -= ret; index += ret;
 		}
 	}
 
@@ -531,13 +545,14 @@ void notifyDownloadingClient(int index) {
 	for (int i = 1; i <= nEvents; i++) {
 		if (clients[i].downloadClient == socks[index]) {
 			// Gui thong diep loi download file: opcode = '5' va payload = '20'
-			char buff[BUFF_SIZE];
+			char buff[9];
 			buff[0] = '5';
 			buff[7] = '2';
 			buff[8] = '0';
 			unsigned short payloadLen = 2;
 			memcpy(buff + 5, &payloadLen, 2);
 			sendMsg(clients[i].socket, buff, 9);
+			cout << "Send a notify downloading client" << endl;
 		}
 	}
 }
@@ -561,7 +576,7 @@ void disconnect(int index)
 	socks[index] = 0;
 	WSACloseEvent(events[index]);
 
-	for (int i = index; i < nEvents-1; i++) {
+	for (int i = index; i < nEvents - 1; i++) {
 		socks[i] = socks[i + 1];
 		events[i] = events[i + 1];
 		clients[i] = clients[i + 1];
@@ -576,22 +591,22 @@ void disconnect(int index)
 
 	nEvents -= 1;
 
-	
-	if (nEvents != index) {
-		socks[index] = socks[nEvents];
-		socks[nEvents] = 0;
-		WSACloseEvent(events[nEvents]);
-		events[index] = WSACreateEvent();
 
-		clients[index] = clients[nEvents];
-		WSAEventSelect(socks[index], events[index], FD_READ | FD_CLOSE);
+	if (nEvents != index) {
+	socks[index] = socks[nEvents];
+	socks[nEvents] = 0;
+	WSACloseEvent(events[nEvents]);
+	events[index] = WSACreateEvent();
+
+	clients[index] = clients[nEvents];
+	WSAEventSelect(socks[index], events[index], FD_READ | FD_CLOSE);
 	}
 	*/
 }
 
 void sendACK(SOCKET s)
 {
-	char buff[BUFF_SIZE];
+	char buff[9];
 	buff[0] = '5';
 	buff[7] = '5';
 	buff[8] = '0';

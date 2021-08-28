@@ -1,8 +1,9 @@
 ﻿  stdafx.cpp
   Client.cpp
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(143): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(200): warning C4018: '<': signed/unsigned mismatch
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(208): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(250): warning C4244: '=': conversion from 'std::streamsize' to 'unsigned short', possible loss of data
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(139): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(233): warning C4018: '<': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(252): warning C4018: '<': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(261): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\client\client.cpp(301): warning C4244: '=': conversion from 'std::streamsize' to 'unsigned short', possible loss of data
   Client.vcxproj -> C:\Users\THINKBOOK\OneDrive\Documents\Visual Studio 2015\Projects\BTL\Debug\Client.exe
   Client.vcxproj -> C:\Users\THINKBOOK\OneDrive\Documents\Visual Studio 2015\Projects\BTL\Debug\Client.pdb (Full PDB)

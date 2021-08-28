@@ -1,12 +1,13 @@
 ﻿  stdafx.cpp
   Server.cpp
 c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(274): warning C4018: '<': signed/unsigned mismatch
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(307): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(324): warning C4018: '<': signed/unsigned mismatch
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(359): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(476): warning C4018: '<': signed/unsigned mismatch
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(511): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(531): warning C4018: '<=': signed/unsigned mismatch
-c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(564): warning C4018: '<': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(299): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(334): warning C4018: '<': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(369): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(410): warning C4018: '<=': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(490): warning C4018: '<': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(525): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(545): warning C4018: '<=': signed/unsigned mismatch
+c:\users\thinkbook\onedrive\documents\visual studio 2015\projects\btl\server\server.cpp(579): warning C4018: '<': signed/unsigned mismatch
   Server.vcxproj -> C:\Users\THINKBOOK\OneDrive\Documents\Visual Studio 2015\Projects\BTL\Debug\Server.exe
   Server.vcxproj -> C:\Users\THINKBOOK\OneDrive\Documents\Visual Studio 2015\Projects\BTL\Debug\Server.pdb (Full PDB)

@@ -90,15 +90,10 @@ bool existsFile(LPCSTR lpFileName) {
 	HANDLE hFind;
 
 	hFind = FindFirstFileA(lpFileName, &FindFileData);
-	if (hFind == INVALID_HANDLE_VALUE)
-	{
-		printf("Error %d: FindFirstFile failed\n", GetLastError());
+	if (hFind == INVALID_HANDLE_VALUE) {
 		return false;
 	}
-	else
-	{
-		_tprintf(TEXT("The first file found is %hs\n"),
-			FindFileData.cFileName);
+	else {
 		FindClose(hFind);
 		return true;
 	}
@@ -120,13 +115,6 @@ void handleFindFile(MESSAGE message) {
 		data.buff[7] = '0';
 	}
 
-	/*
-	EnterCriticalSection(&criticalSection);
-	sendQueue.push(data);
-	LeaveCriticalSection(&criticalSection);
-	WakeConditionVariable(&queueNotEmpty);
-	*/
-
 	sendQueue.push(data);
 }
 
@@ -137,8 +125,16 @@ void requestFindFile() {
 		string selection; getline(cin, selection);
 
 		if (selection == "1") {
-			cout << "Enter file name: ";
-			getline(cin, requestedFileName);
+			do {
+				cout << "Enter file name: ";
+				getline(cin, requestedFileName);
+				if (requestedFileName.find('.') != string::npos) {
+					break;
+				}
+				else {
+					cout << "File name must have an extension part!" << endl;
+				}
+			} while (true);
 
 			unsigned short payloadLen = requestedFileName.length();
 			SEND_DATA data(payloadLen + 7);
@@ -148,18 +144,12 @@ void requestFindFile() {
 			memcpy(data.buff + 5, &payloadLen, 2);
 			memcpy(data.buff + 7, requestedFileName.c_str(), payloadLen);
 
-			/*
-			EnterCriticalSection(&criticalSection);
-			sendQueue.push(data);
-			LeaveCriticalSection(&criticalSection);
-			WakeConditionVariable(&queueNotEmpty);
-			*/
-
 			sendQueue.push(data);
 			break;
 		}
 		else if (selection == "2") {
-			SetEvent(hExitEvent); break;
+			exit(0);
+			//SetEvent(hExitEvent); break;
 		}
 		else {
 			cout << "Invalid selection!" << endl;
@@ -180,30 +170,93 @@ vector<string> split(string s, string delimiter) {
 	return result;
 }
 
+/*
+void handleFindFileResult(MESSAGE message) {
+if (message.length == 0) {
+cout << "No client has a such file!" << endl;
+requestFindFile();
+return;
+}
+
+do {
+cout << endl << "Do you want to download file (1: Download, 2: Exit) ?" << endl;
+cout << "Your selection: ";
+string selection; getline(cin, selection);
+
+if (selection == "1") {
+string payloadStr(message.payload, message.length);
+vector<string> clientIDs = split(payloadStr, "-");
+
+cout << "Selects a client id to download: " << endl;
+for (int i = 0; i < clientIDs.size(); i++) {
+cout << i << ". " << clientIDs[i] << endl;
+}
+
+cout << "Your selected id: ";
+string idxStr; getline(cin, idxStr);
+int idx = stoi(idxStr);
+
+unsigned short payloadLen = clientIDs[idx].length();
+SEND_DATA data(payloadLen + 7);
+data.buff[0] = '2';
+unsigned int id = 0;
+memcpy(data.buff + 1, &message.id, 4);
+memcpy(data.buff + 5, &payloadLen, 2);
+memcpy(data.buff + 7, clientIDs[idx].c_str(), payloadLen);
+
+sendQueue.push(data);
+break;
+}
+else if (selection == "2") {
+exit(0);
+//SetEvent(hExitEvent); break;
+}
+else {
+cout << "Invalid selection!" << endl;
+}
+} while (true);
+}
+*/
+
 void handleFindFileResult(MESSAGE message) {
 	if (message.length == 0) {
-		cout << "No client has a such file!" << endl;
+		cout << "No client has that file!" << endl;
 		requestFindFile();
 		return;
 	}
 
+	string payloadStr(message.payload, message.length);
+	vector<string> clientIDs = split(payloadStr, "-");
+
+	//display find file result
+	cout << "Clients have that file:" << endl;
+	for (int i = 0; i < clientIDs.size(); i++) {
+		cout << i << ". " << clientIDs[i] << endl;
+	}
+
 	do {
-		cout << endl << "Do you want to download file (1: Download, 2: Exit) ?" << endl;
+		cout << endl << "Do you want to download file (1: Download, 2: Exit, 3: Back) ?" << endl;
 		cout << "Your selection: ";
 		string selection; getline(cin, selection);
 
 		if (selection == "1") {
-			string payloadStr(message.payload, message.length);
-			vector<string> clientIDs = split(payloadStr, "-");
+			int idx = -1;
 
-			cout << "Selects a client id to download: " << endl;
-			for (int i = 0; i < clientIDs.size(); i++) {
-				cout << i << ". " << clientIDs[i] << endl;
-			}
+			do {
+				cout << "Select a client index to download: " << endl;
+				cout << "Your selected index: ";
+				string idxStr; getline(cin, idxStr);
 
-			cout << "Your selected id: ";
-			string idxStr; getline(cin, idxStr);
-			int idx = stoi(idxStr);
+				try {
+					idx = stoi(idxStr);
+					if (0 <= idx && idx < clientIDs.size()) {
+						break;
+					}
+				}
+				catch (invalid_argument exception) {}
+
+				cout << "Invalid index!" << endl;
+			} while (true);
 
 			unsigned short payloadLen = clientIDs[idx].length();
 			SEND_DATA data(payloadLen + 7);
@@ -213,17 +266,15 @@ void handleFindFileResult(MESSAGE message) {
 			memcpy(data.buff + 5, &payloadLen, 2);
 			memcpy(data.buff + 7, clientIDs[idx].c_str(), payloadLen);
 
-			/*
-			EnterCriticalSection(&criticalSection);
-			sendQueue.push(data);
-			LeaveCriticalSection(&criticalSection);
-			WakeConditionVariable(&queueNotEmpty);
-			*/
 			sendQueue.push(data);
 			break;
 		}
 		else if (selection == "2") {
-			SetEvent(hExitEvent); break;
+			exit(0);
+			//SetEvent(hExitEvent); break;
+		}
+		else if (selection == "3") {
+			requestFindFile();
 		}
 		else {
 			cout << "Invalid selection!" << endl;
@@ -267,7 +318,6 @@ void sendBlockFile(unsigned int id) {
 	}
 
 	LeaveCriticalSection(&criticalSection);
-	//WakeConditionVariable(&queueNotEmpty);
 }
 
 void handleDownloadFile(MESSAGE message) {
@@ -304,12 +354,6 @@ void handleFileDataResult(MESSAGE message) {
 		memcpy(data.buff + 5, &payloadLen, 2);
 		memcpy(data.buff + 7, "40", 2);
 
-		/*
-		EnterCriticalSection(&criticalSection);
-		sendQueue.push(data);
-		LeaveCriticalSection(&criticalSection);
-		WakeConditionVariable(&queueNotEmpty);
-		*/
 		sendQueue.push(data);
 	}
 	else {
@@ -327,6 +371,7 @@ void noticeRecvACK() {
 
 void handleNotice(MESSAGE message) {
 	string noticeStr(message.payload, message.length);
+
 	try {
 		unsigned short noticeCode = stoi(noticeStr);
 
@@ -335,6 +380,7 @@ void handleNotice(MESSAGE message) {
 		case 10:
 			cout << "Find fail!" << endl;
 			noticeRecvACK();
+			requestFindFile();
 			break;
 		case 11:
 			cout << "Finding ..." << endl;
@@ -356,7 +402,9 @@ void handleNotice(MESSAGE message) {
 		}
 	}
 	catch (invalid_argument exception) {
-		cout << "noticeStr = " << noticeStr << " : can't parse to integer!" << endl;
+		cout << "noticeStr = " << noticeStr << endl;
+		cout << "Notice message can't be parsed to integer. Terminate program!" << endl;
+		exit(1);
 	}
 }
 
@@ -376,7 +424,6 @@ unsigned _stdcall handleThread(void* param) {
 	case '5':
 		handleNotice(*message); break;
 	default:
-		// Todo: Xu ly message khong hop le
 		break;
 	}
 
@@ -406,7 +453,8 @@ unsigned _stdcall recvThread(void* param) {
 			_beginthreadex(0, 0, handleThread, (void*)message, 0, 0);
 		}
 		catch (bad_alloc exception) {
-			cout << "Can't allocate memory!" << endl;
+			cout << "Memory can't be allocated. Terminate program!" << endl;
+			exit(1);
 		}
 
 	}
@@ -416,8 +464,6 @@ unsigned _stdcall recvThread(void* param) {
 
 unsigned _stdcall sendThread(void* param) {
 	while (1) {
-		//Sleep(5);
-		//int queueSize = sendQueue.size();
 		SEND_DATA data = sendQueue.pop();
 
 		int ret = send(client, data.buff, data.len, 0);
@@ -430,11 +476,6 @@ unsigned _stdcall sendThread(void* param) {
 		unique_lock<mutex> condition_lock(recvACK_mutex);
 		recvACK_condition.wait(condition_lock, [=] { return recvACK == true; });
 		recvACK = false;
-		/*
-		if (queueSize > 1) {
-		Sleep(3 * queueSize);
-		}
-		*/
 	}
 
 	return 0;
@@ -447,7 +488,10 @@ void enterFolders() {
 		cout << "Enter your shared folder path: ";
 		getline(cin, sharedFolderPath);
 
-		if (existsFile(sharedFolderPath.c_str())) {
+		if (sharedFolderPath.find(".") != string::npos) {
+			cout << "Folder name must not have extension part!" << endl;
+		}
+		else if (existsFile(sharedFolderPath.c_str())) {
 			break;
 		}
 		else {
@@ -459,7 +503,10 @@ void enterFolders() {
 		cout << "Enter your download folder path: ";
 		getline(cin, downloadFolderPath);
 
-		if (existsFile(downloadFolderPath.c_str())) {
+		if (downloadFolderPath.find(".") != string::npos) {
+			cout << "Folder name must not have extension part!" << endl;
+		}
+		else if (existsFile(downloadFolderPath.c_str())) {
 			break;
 		}
 		else {
@@ -468,8 +515,22 @@ void enterFolders() {
 	}
 }
 
-int main()
+/*
+string prepareDownloadFileName() {
+
+}
+*/
+
+int main(int argc, char *argv[])
 {
+	if (argc != 3) {
+		printf("Execution error.");
+		return 0;
+	}
+
+	char* serverIP = argv[1];
+	int serverPort = atoi(argv[2]);
+
 	enterFolders();
 
 	//initiates winsock v2.2
@@ -491,8 +552,8 @@ int main()
 	//specifies server address
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(SERVER_PORT);
-	inet_pton(AF_INET, SERVER_ADDR, &serverAddr.sin_addr);
+	serverAddr.sin_port = htons(serverPort);
+	inet_pton(AF_INET, serverIP, &serverAddr.sin_addr);
 
 	//Request to connect server
 	if (connect(client, (sockaddr*)&serverAddr, sizeof(serverAddr))) {
@@ -509,7 +570,6 @@ int main()
 		TEXT("ExitEvent")  // object name
 	);
 
-	//InitializeConditionVariable(&queueNotEmpty);
 	InitializeCriticalSection(&criticalSection);
 
 	_beginthreadex(0, 0, recvThread, NULL, 0, 0);
